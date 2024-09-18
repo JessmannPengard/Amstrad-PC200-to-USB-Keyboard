@@ -75,4 +75,3 @@ En caso de que necesites limpiar la memoria flash de la Raspberry Pi Pico por er
 
 3. Repite el proceso de instalación de **CircuitPython** desde el Paso 1.
 
----
