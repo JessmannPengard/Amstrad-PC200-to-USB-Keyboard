@@ -1,11 +1,23 @@
 import board
-
+import digitalio
 from kmk.kmk_keyboard import KMKKeyboard
 from kmk.keys import KC
 from kmk.scanners import DiodeOrientation
+from kmk.extensions.lock_status import LockStatus
 
 keyboard = KMKKeyboard()
 
+# Definir los pines para los LEDs
+capslock_led = digitalio.DigitalInOut(board.GP26)
+capslock_led.direction = digitalio.Direction.OUTPUT
+
+scrolllock_led = digitalio.DigitalInOut(board.GP27)
+scrolllock_led.direction = digitalio.Direction.OUTPUT
+
+numlock_led = digitalio.DigitalInOut(board.GP28)
+numlock_led.direction = digitalio.Direction.OUTPUT
+
+# Definir los pines de la matriz del teclado
 keyboard.col_pins = (board.GP0,board.GP1,board.GP2,board.GP3,board.GP4,board.GP5,board.GP6,board.GP7)
 keyboard.row_pins = (board.GP9,board.GP10,board.GP11,board.GP12,board.GP13,board.GP14,board.GP15,board.GP16,board.GP17,board.GP18,board.GP19,board.GP20,board.GP21)
 
@@ -31,6 +43,32 @@ keymap = [
 ]
 
 keyboard.keymap = keymap
+
+class LEDLockStatus(LockStatus):
+    # Función para actualizar los LEDs según el estado de los bloqueos
+    def set_lock_leds(self):
+        if self.get_caps_lock():
+            capslock_led.value = False  # Encender el LED de Caps Lock
+        else:
+            capslock_led.value = True  # Apagar el LED de Caps Lock
+
+        if self.get_scroll_lock():
+            scrolllock_led.value = False  # Encender el LED de Scroll Lock
+        else:
+            scrolllock_led.value = True  # Apagar el LED de Scroll Lock
+            
+        if self.get_num_lock():
+            numlock_led.value = False  # Encender el LED de Num Lock
+        else:
+            numlock_led.value = True  # Apagar el LED de Num Lock
+
+    def after_hid_send(self, sandbox):
+        super().after_hid_send(sandbox)
+        if self.report_updated:
+            self.set_lock_leds()
+
+
+keyboard.extensions.append(LEDLockStatus())
 
 if __name__ == '__main__':
     keyboard.go()
